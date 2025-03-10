@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Medical Summarization</title>
+  <style>
+    /* ------------------------------------------------------------
+       RESETS & BASIC STYLING
+    ------------------------------------------------------------ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Imagine de fundal + setări */
+      background: url("https://wallpapers.com/images/hd/medical-background-cjge7e89adg6ub8x.jpg") no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      /* Face pagina să umple toată înălțimea ecranului */
+      min-height: 100vh;
+      /* Pentru a alinia conținutul pe centru vertical */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2em;
+    }
+
+    /* ------------------------------------------------------------
+       CONTAINER CENTRAL
+    ------------------------------------------------------------ */
+    .container {
+      background: rgba(255, 255, 255, 0.9); /* Fundal semi-transparent */
+      backdrop-filter: blur(3px);           /* O ușoară estompare pentru fundal */
+      border-radius: 8px;
+      width: 600px;
+      max-width: 90%;
+      padding: 2em;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1em;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+      color: #444;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 1em;
+      font-size: 1em;
+      padding: 0.75em;
+      resize: vertical;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: #007bff;
+    }
+
+    button {
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+      transition: background 0.3s ease;
+      font-weight: bold;
+      margin-bottom: 1em;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+
+    #result {
+      margin-top: 1em;
+      padding: 1em;
+      background-color: #fff;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      color: #333;
+      white-space: pre-wrap; /* menține \n */
+      min-height: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Medical Summarization</h1>
+    
+    <label for="inputText">Enter your medical text:</label>
+    <textarea id="inputText" placeholder="Paste or type your text here..."></textarea>
+    <button id="summarizeBtn">Summarize</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('summarizeBtn').addEventListener('click', async () => {
+      const inputText = document.getElementById('inputText').value;
+      
+      // Înlocuiește cu linkul real de la ngrok + /predict
+      const backendUrl = "https://594c-35-240-192-245.ngrok-free.app/predict";
+
+      try {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: inputText })
+        });
+
+        if (!response.ok) {
+          throw new Error('Request failed: ' + response.status);
+        }
+
+        let { summary } = await response.json();
+
+        // Eliminăm [INST] și [/INST], dacă apar
+        summary = summary.replace(/\[INST\]/gi, '').replace(/\[\/INST\]/gi, '');
+
+        // Dacă textul introdus e repetat identic, îl tăiem
+        const indexOfUserText = summary.indexOf(inputText);
+        if (indexOfUserText !== -1) {
+          summary = summary.slice(indexOfUserText + inputText.length).trim();
+        }
+
+        document.getElementById('result').textContent = summary;
+      } catch (error) {
+        console.error(error);
+        document.getElementById('result').textContent = "Error: " + error;
+      }
+    });
+  </script>
+
+</body>
+</html>
